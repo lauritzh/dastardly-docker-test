@@ -1,0 +1,26 @@
+name: "dastardly"
+on: push
+jobs:
+  dastardly:
+    name: Dastardly Scan
+    runs-on: ubuntu-latest
+    if: (github.actor != 'dependabot[bot]')
+    steps:
+      - uses: actions/checkout@v2
+      - name: Launch Docker
+        run: |
+          docker build -t test .
+          docker run -d test
+        
+      - name: Run Dastardly Action Step
+        continue-on-error: true                        
+        uses: PortSwigger/dastardly-github-action@main
+        with:
+         target-url: 'http://127.0.0.1:1234'
+
+      - name: Publish Test Report
+        if: always()                                    # Forces this step to always run
+        uses: mikepenz/action-junit-report@v3
+        with:
+         report_paths: '**/dastardly-report.xml'       # You need to update this path if you pass in a different output filename to the Dastardly action
+         require_tests: true
